@@ -2,6 +2,8 @@
 #include "common.h"
 #include "compiler.h"
 #include "debug.h"
+#include "memory.h"
+#include "object.h"
 #include "value.h"
 
 VM vm;
@@ -18,6 +20,20 @@ static bool is_falsey(Value value) {
     return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
 }
 
+static void concatenate(void) {
+    ObjString *b = AS_STRING(pop());
+    ObjString *a = AS_STRING(pop());
+
+    size_t length = a->length + b->length;
+    char *chars = ALLOCATE(char, length + 1);
+    memcpy(chars, a->chars, a->length);
+    memcpy(chars + a->length, b->chars, b->length);
+    chars[length] = '\0';
+
+    ObjString *result = take_str(chars, length);
+    push(OBJ_VAL((Obj *)result));
+}
+
 static void vm_error(const char *format, ...) {
     va_list args;
     va_start(args, format);
@@ -31,11 +47,20 @@ static void vm_error(const char *format, ...) {
     reset_stack();
 }
 
-void init_VM(void) { reset_stack(); }
+void init_VM(void) {
+    reset_stack();
+    vm.objects = NULL;
+    init_table(&vm.strings);
+}
 
-void free_VM(void) {}
+void free_VM(void) {
+    free_table(&vm.strings);
+    free_objects();
+}
 
 static InterpretResult run(void) {
+    Value a, b;
+
 #define read_byte() (*vm.ip++)
 #define read_constant() (vm.chunk->constants.items[read_byte()])
 #define binary_op(valueType, op)                                               \
@@ -64,33 +89,21 @@ static InterpretResult run(void) {
         u8 instruction;
         switch (instruction = read_byte()) {
         case OP_CONSTANT: {
-            Value constant = read_constant();
-            push(constant);
+            a = read_constant();
+            push(a);
             break;
         }
-        case OP_NIL:
-            push(NIL_VAL);
-            break;
-        case OP_TRUE:
-            push(BOOL_VAL(true));
-            break;
-        case OP_FALSE:
-            push(BOOL_VAL(false));
-            break;
+        case OP_NIL  : push(NIL_VAL); break;
+        case OP_TRUE : push(BOOL_VAL(true)); break;
+        case OP_FALSE: push(BOOL_VAL(false)); break;
         case OP_EQUAL:
-            Value b = pop();
-            Value a = pop();
+            b = pop();
+            a = pop();
             push(BOOL_VAL(values_equal(a, b)));
             break;
-        case OP_GREATER:
-            binary_op(BOOL_VAL, >);
-            break;
-        case OP_LESS:
-            binary_op(BOOL_VAL, <);
-            break;
-        case OP_NOT:
-            push(BOOL_VAL(is_falsey(pop())));
-            break;
+        case OP_GREATER: binary_op(BOOL_VAL, >); break;
+        case OP_LESS   : binary_op(BOOL_VAL, <); break;
+        case OP_NOT    : push(BOOL_VAL(is_falsey(pop()))); break;
         case OP_NEGATE:
             if (stack_is_empty()) {
                 vm_error("Can't negate because the stack is empty.");
@@ -104,25 +117,28 @@ static InterpretResult run(void) {
             push(NUMBER_VAL(-AS_NUMBER(pop())));
             break;
         case OP_ADD:
-            if (stack_is_empty() | stack_has(1)) {
+            if (stack_is_empty() || stack_has(1)) {
                 return INTERPRET_COMPILE_ERROR;
+            } else if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
+                concatenate();
+            } else if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) {
+                binary_op(NUMBER_VAL, +);
             }
-            binary_op(NUMBER_VAL, +);
             break;
         case OP_SUBTRACT:
-            if (stack_is_empty() | stack_has(1)) {
+            if (stack_is_empty() || stack_has(1)) {
                 return INTERPRET_COMPILE_ERROR;
             }
             binary_op(NUMBER_VAL, -);
             break;
         case OP_MULTIPLY:
-            if (stack_is_empty() | stack_has(1)) {
+            if (stack_is_empty() || stack_has(1)) {
                 return INTERPRET_COMPILE_ERROR;
             }
             binary_op(NUMBER_VAL, *);
             break;
         case OP_DIVIDE:
-            if (stack_is_empty() | stack_has(1)) {
+            if (stack_is_empty() || stack_has(1)) {
                 return INTERPRET_COMPILE_ERROR;
             }
             binary_op(NUMBER_VAL, /);
@@ -131,8 +147,7 @@ static InterpretResult run(void) {
             print_Value(pop());
             printf("\n");
             return INTERPRET_OK;
-        default:
-            return INTERPRET_COMPILE_ERROR;
+        default: return INTERPRET_COMPILE_ERROR;
         }
     }
 

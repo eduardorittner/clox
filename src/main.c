@@ -43,10 +43,8 @@ static void run_file(const char *path) {
     InterpretResult result = interpret(source);
     free(source);
 
-    if (result == INTERPRET_COMPILE_ERROR)
-        exit(65);
-    if (result == INTERPRET_RUNTIME_ERROR)
-        exit(70);
+    if (result == INTERPRET_COMPILE_ERROR) exit(65);
+    if (result == INTERPRET_RUNTIME_ERROR) exit(70);
 }
 
 int main(int argc, const char *argv[]) {

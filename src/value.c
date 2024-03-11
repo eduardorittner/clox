@@ -1,6 +1,7 @@
 #include "value.h"
 #include "common.h"
 #include "memory.h"
+#include "object.h"
 
 void init_ValueArray(ValueArray *array) {
     array->count = 0;
@@ -26,33 +27,23 @@ void write_ValueArray(ValueArray *array, Value value) {
 
 void print_Value(Value value) {
     switch (value.type) {
-    case VAL_NIL:
-        printf("nil");
-        break;
-    case VAL_BOOL:
-        printf(AS_BOOL(value) ? "true" : "false");
-        break;
-    case VAL_NUMBER:
-        printf("%g", AS_NUMBER(value));
-        break;
+    case VAL_NIL   : printf("nil"); break;
+    case VAL_BOOL  : printf(AS_BOOL(value) ? "true" : "false"); break;
+    case VAL_NUMBER: printf("%g", AS_NUMBER(value)); break;
     case VAL_OBJ:
-        print_object(value);
+        print_obj(value);
         break;
         break;
     }
 }
 
 bool values_equal(Value a, Value b) {
-    if (a.type != b.type)
-        return false;
+    if (a.type != b.type) return false;
     switch (a.type) {
-    case VAL_NIL:
-        return true;
-    case VAL_BOOL:
-        return AS_BOOL(a) == AS_BOOL(b);
-    case VAL_NUMBER:
-        return AS_NUMBER(a) == AS_NUMBER(b);
-    default:
-        return false;
+    case VAL_NIL   : return true;
+    case VAL_BOOL  : return AS_BOOL(a) == AS_BOOL(b);
+    case VAL_NUMBER: return AS_NUMBER(a) == AS_NUMBER(b);
+    case VAL_OBJ   : return AS_OBJ(a) == AS_OBJ(b);
+    default        : return false;
     }
 }

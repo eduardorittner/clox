@@ -40,36 +40,20 @@ size_t disassemble_instruction(Chunk *chunk, size_t offset) {
 
     u8 instruction = chunk->code[offset];
     switch (instruction) {
-    case OP_CONSTANT:
-        return instruction_constant("OP_CONSTANT", chunk, offset);
-    case OP_NIL:
-        return instruction_simple("OP_NIL", offset);
-    case OP_TRUE:
-        return instruction_simple("OP_TRUE", offset);
-    case OP_FALSE:
-        return instruction_simple("OP_FALSE", offset);
-    case OP_EQUAL:
-        return instruction_simple("OP_EQUAL", offset);
-    case OP_GREATER:
-        return instruction_simple("OP_GREATER", offset);
-    case OP_LESS:
-        return instruction_simple("OP_LESS", offset);
-    case OP_NOT:
-        return instruction_simple("OP_NOT", offset);
-    case OP_NEGATE:
-        return instruction_simple("OP_NEGATE", offset);
-    case OP_ADD:
-        return instruction_simple("OP_ADD", offset);
-    case OP_SUBTRACT:
-        return instruction_simple("OP_SUBTRACT", offset);
-    case OP_MULTIPLY:
-        return instruction_simple("OP_MULTIPLY", offset);
-    case OP_DIVIDE:
-        return instruction_simple("OP_DIVIDE", offset);
-    case OP_RETURN:
-        return instruction_simple("OP_RETURN", offset);
-    default:
-        printf("Unknown opcode %d\n", instruction);
-        return offset + 1;
+    case OP_CONSTANT: return instruction_constant("OP_CONSTANT", chunk, offset);
+    case OP_NIL     : return instruction_simple("OP_NIL", offset);
+    case OP_TRUE    : return instruction_simple("OP_TRUE", offset);
+    case OP_FALSE   : return instruction_simple("OP_FALSE", offset);
+    case OP_EQUAL   : return instruction_simple("OP_EQUAL", offset);
+    case OP_GREATER : return instruction_simple("OP_GREATER", offset);
+    case OP_LESS    : return instruction_simple("OP_LESS", offset);
+    case OP_NOT     : return instruction_simple("OP_NOT", offset);
+    case OP_NEGATE  : return instruction_simple("OP_NEGATE", offset);
+    case OP_ADD     : return instruction_simple("OP_ADD", offset);
+    case OP_SUBTRACT: return instruction_simple("OP_SUBTRACT", offset);
+    case OP_MULTIPLY: return instruction_simple("OP_MULTIPLY", offset);
+    case OP_DIVIDE  : return instruction_simple("OP_DIVIDE", offset);
+    case OP_RETURN  : return instruction_simple("OP_RETURN", offset);
+    default         : printf("Unknown opcode %d\n", instruction); return offset + 1;
     }
 }

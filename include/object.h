@@ -4,12 +4,12 @@
 #include "common.h"
 #include "value.h"
 
-#define TYPEOF_OBJ(value) (as_obj(value)->type)
+#define TYPEOF_OBJ(value) (AS_OBJ(value)->type)
 
-#define IS_STRING(value) is_obj_type(value, ObjString)
+#define IS_STRING(value) is_obj_type(value, OBJ_STRING)
 
-#define AS_STRING(value) ((ObjString *)as_obj(value))
-#define AS_CSTRING(value) ((ObjString *)as_obj(value)->chars)
+#define AS_STRING(value) ((ObjString *)AS_OBJ(value))
+#define AS_CSTRING(value) (((ObjString *)AS_OBJ(value))->chars)
 
 typedef enum {
     OBJ_STRING,
@@ -17,14 +17,17 @@ typedef enum {
 
 struct Obj {
     ObjType type;
+    struct Obj *next;
 };
 
 struct ObjString {
     Obj obj;
     size_t length;
     char *chars;
+    u32 hash;
 };
 
+ObjString *take_str(char *chars, size_t length);
 ObjString *copy_str(const char *string, size_t length);
 void print_obj(Value value);
 

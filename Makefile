@@ -1,15 +1,21 @@
-CC=gcc -Wall -Wextra -std=c11 -Wno-implicit-fallthrough
-LDFLAGS=-Wall -Wextra -std=c11 -Wno-implicit-fallthrough
-DEPS=common.h
+CC = gcc
+CFLAGS = -Wall -Wextra -pedantic -fsanitize=address,undefined -I $(INCLUDE_DIR) -Oz -fno-delete-null-pointer-checks -Werror=int-conversion -pie -fno-strict-overflow -fno-strict-aliasing
+SRC_DIR = src
+INCLUDE_DIR = include
+BUILD_DIR = build
+BIN_DIR = bin
+DEPS = ./include/common.h
 
-all: main
+objects = main.o object.o value.o vm.o memory.o table.o debug.o compiler.o chunk.o scanner.o
 
-main: memory.o chunk.o main.o debug.o value.o vm.o scanner.o compiler.o object.o
-	$(CC) $(LDFLAGS) -o clox main.o memory.o chunk.o debug.o value.o vm.o scanner.o compiler.o object.o
+all: clox
 
-%.o: %.c %.h $(DEPS)
-	$(CC) -c -o $@  $< $(CFLAGS)
+clox: $(objects)
+	$(CC) $(CFLAGS) -o ./bin/$@ $(patsubst %, $(BUILD_DIR)/%, $(objects))
 
-.PHONY = clean
+$(objects): %.o: $(SRC_DIR)/%.c $(INCLUDE_DIR)/%.h $(INCLUDE_DIR)/common.h
+	$(CC) $(CFLAGS) -c -o ./build/$@ $<
+
 clean:
-	rm -f *.o *.gch main
+	rm -f build/* bin/*
+

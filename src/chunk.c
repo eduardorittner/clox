@@ -37,9 +37,7 @@ void write_line(LineArray *array, size_t line) {
     if (line >= array->alloc) {
         size_t old_alloc = array->alloc;
         size_t new_alloc = GROW_CAPACITY(old_alloc);
-        while (new_alloc < line) {
-            new_alloc = GROW_CAPACITY(new_alloc);
-        }
+        while (new_alloc < line) { new_alloc = GROW_CAPACITY(new_alloc); }
         array->alloc = new_alloc;
         array->items =
             GROW_ARRAY(size_t, array->items, old_alloc, array->alloc);
